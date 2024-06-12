@@ -19,8 +19,8 @@ class Refferal extends Controller
         $userId = $request->input('userTgId');
         $totalReward = number_format(TgMemberReff::where(['userTgId'=>$userId])->sum('amount'),0,",",".");
         $fromRefferal= DB::table('reward_refferals')
-                        ->join('members','members.userTgId','=','reward_refferals.userTgIdJoined')
-                       ->where(['members.userTgId'=>$userId])
+                            ->join('members','members.userTgId','=','reward_refferals.userTgIdJoined')
+                       ->where(['reward_refferals.userTgId'=>$userId])
                        ->select('reward_refferals.amount','members.fullname')
                        ->get();
         $rewardPerRef= DB::table('reward_masters')->where(['type' => 'refferal'])

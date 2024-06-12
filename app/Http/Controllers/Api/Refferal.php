@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 class Refferal extends Controller
 {
-    protected $refferalLink = "https://t.me/mink_coin_rewards_bot/mink?startapp=";
+    protected $refferalLink = "https://t.me/mink_coin_rewards_bot?start=";
     public function getInfo(Request $request){
         $userId = $request->input('userTgId');
         $totalReward = number_format(TgMemberReff::where(['userTgId'=>$userId])->sum('amount'),0,",",".");

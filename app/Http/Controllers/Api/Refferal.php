@@ -22,7 +22,7 @@ class Refferal extends Controller
                             ->join('members','members.userTgId','=','reward_refferals.userTgIdJoined')
                        ->where(['reward_refferals.userTgId'=>$userId])
                        ->select('reward_refferals.amount','members.fullname')
-                       ->get();
+                       ->orderBy('reward_refferals.id','desc')->get();
         $rewardPerRef= DB::table('reward_masters')->where(['type' => 'refferal'])
                         ->select('amount')->first();
         $rewardPerRefferal = $this->formatNumber($rewardPerRef->amount);

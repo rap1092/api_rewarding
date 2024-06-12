@@ -98,14 +98,15 @@ class Members extends Controller
         $userId = $request->input('userTgId');
         $reward = DB::table('reward_masters')->where('type','farming')->select('amount')->first();
         $start = Carbon::now('Asia/Jakarta');
-        $target=  Carbon::parse($start)->addHours(7);
+        $target=  Carbon::parse($start)->addHours(8);
         $farming= Farming::create([
             'userTgId' => $userId,
             'transactionId' => Str::uuid(),
             'startFarmingDate' => $start,
             'targetFarmingDate' => $target,
             'reward' => $reward->amount,
-            'status' => 'farming'
+            'status' => 'farming',
+            'point' => 27.8
         ]);
         $startFarm = Carbon::parse($farming->startFarmingDate);
         $targetFarm = Carbon::parse($farming->targetFarmingDate);

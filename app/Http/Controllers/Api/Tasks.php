@@ -17,7 +17,7 @@ class Tasks extends Controller
 {
     public function getTasks(Request $request)
     {
-        $task = DB::table('tasks_rewards')->get();
+        $task = DB::table('tasks_rewards')->orderBy('amount','desc')->get();
         $tasks = [];
         foreach ($task as $item) {
             $check = DB::table('user_tasks_rewards')->where([

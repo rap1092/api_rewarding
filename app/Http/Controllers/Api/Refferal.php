@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 class Refferal extends Controller
 {
-    protected $refferalLink = "https://t.me/mink_coin_rewards_bot?start=";
+    protected $refferalLink = "https://t.me/mink_coin_rewards_bot/mink?startapp=";
     public function getInfo(Request $request){
         $userId = $request->input('userTgId');
         $totalReward = number_format(TgMemberReff::where(['userTgId'=>$userId])->sum('amount'),0,",",".");
@@ -58,7 +58,6 @@ class Refferal extends Controller
             return number_format($number / 1e3, 0) . 'K';
         }
     
-        // Angka kurang dari 1000 tetap ditampilkan apa adanya
         return number_format($number, 0);
     }
     

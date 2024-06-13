@@ -30,7 +30,7 @@ class Tasks extends Controller
                     array_push($tasks, [
                         'userTgId' => $row->userTgId,
                         'taskId' => $row->taskId,
-                        'amount' => number_format($item->amount,",","."),
+                        'amount' => $this->formatNumber($item->amount),
                         'icon' => $item->remixicon,
                         'title' => $item->title,
                         'type' => $item->type,
@@ -43,7 +43,7 @@ class Tasks extends Controller
                 array_push($tasks, [
                     'userTgId' => $request->input('userTgId'),
                     'taskId' => $item->id,
-                    'amount' => number_format($item->amount,",","."),
+                    'amount' => $this->formatNumber($item->amount),
                     'icon' => $item->remixicon,
                     'title' => $item->title,
                     'url' => $item->url,

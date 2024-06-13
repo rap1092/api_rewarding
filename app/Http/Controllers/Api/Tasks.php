@@ -33,6 +33,8 @@ class Tasks extends Controller
                         'amount' => $this->formatNumber($item->amount),
                         'icon' => $item->remixicon,
                         'title' => $item->title,
+                        'type' => $item->type,
+                        'username' => $item->username,    
                         'url' => $item->url,
                         'status' => $row->status
                     ]);    
@@ -45,14 +47,12 @@ class Tasks extends Controller
                     'icon' => $item->remixicon,
                     'title' => $item->title,
                     'url' => $item->url,
+                    'type' => $item->type,
+                    'username' => $item->username,
                     'status' => '1'
                 ]);
             }
         }
-
-        // usort($tasks, function ($item1, $item2) {
-        //     return $item1['status'] <=> $item2['status'];
-        // });
         return Response()->json($tasks);
     }
 

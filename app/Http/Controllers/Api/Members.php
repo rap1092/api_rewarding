@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Constraint\IsEmpty;
 
 class Members extends Controller
 {
@@ -29,7 +30,7 @@ class Members extends Controller
                 'usernameTg' => $usrname
             ]);
             if ($create) {
-                $this->addReward($userId,$reff);
+                $this->addReward($userId, $reff);
                 return Response()->json(['status' => true, 'message' => 'Member is successfully registered'], 200, [], JSON_PRETTY_PRINT);
             }
             return Response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
@@ -40,66 +41,73 @@ class Members extends Controller
         ], 400, [], JSON_PRETTY_PRINT);
     }
 
-    public function memberIsLogedin(Request $request){
+    public function memberIsLogedin(Request $request)
+    {
         $userId = $request->input('user_id');
         $check = TgMembers::where(['userTgId' => $userId])->count();
-        if($check > 0){
+        if ($check > 0) {
             return Response()->json([
                 'status' => true,
                 'message' => 'Authenticated'
             ], 200, [], JSON_PRETTY_PRINT);
-    
+
         }
         return Response()->json([
             'status' => false,
             'message' => 'Un Authenticated'
         ], 401, [], JSON_PRETTY_PRINT);
     }
-    
 
-    function addReward($userId, $fromReffId){
+
+    function addReward($userId, $fromReffId)
+    {
         $getBalanceJoin = Balance::where(['userTgId' => $userId]);
         $rewardFromJoin = DB::table('reward_masters')->where(['type' => 'join'])->select('amount')->first();
         $rewardFromReff = DB::table('reward_masters')->where(['type' => 'refferal'])->select('amount')->first();
 
-        if($getBalanceJoin->count() < 1){
+        if ($getBalanceJoin->count() < 1) {
             $create = Balance::create([
                 'userTgId' => $userId,
                 'balance' => $rewardFromJoin->amount,
                 'wdID' => hash('sha512', Str::uuid())
-            ]);            
-            $getBalanceReff = Balance::where(['userTgId' => $fromReffId])->first();
-            $update = Balance::where(['userTgId' => $fromReffId])->update([
-                'balance' => $getBalanceReff->balance + $rewardFromReff->amount
             ]);
-            $balanceReward = TgMemberReff::create([
-                'userTgId' => $fromReffId,
-                'userTgIdJoined' => $userId,
-                'amount' => $rewardFromReff->amount
-            ]);
-            return ($create && $update && $balanceReward);
+            if ($fromReffId) {
+                $getBalanceReff = Balance::where(['userTgId' => $fromReffId])->first();
+                $update = Balance::where(['userTgId' => $fromReffId])->update([
+                    'balance' => $getBalanceReff->balance + $rewardFromReff->amount
+                ]);
+                $balanceReward = TgMemberReff::create([
+                    'userTgId' => $fromReffId,
+                    'userTgIdJoined' => $userId,
+                    'amount' => $rewardFromReff->amount
+                ]);
+                return ($create && $update && $balanceReward);
+            }
+            return $create;
         }
         return true;
     }
 
-    public function getUserInfo(Request $request){
+    public function getUserInfo(Request $request)
+    {
         $balance = Balance::where([
             'userTgId' => $request->input('userTgId')
         ])->select('balance')->first();
 
         $userInfo = TgMembers::where(['userTgId' => $request->input('userTgId')])->first();
         return Response()->json([
-            'balance' => number_format($balance->balance,0,",","."),
+            'balance' => number_format($balance->balance, 0, ",", "."),
             'userInfo' => $userInfo
-        ],200,[],JSON_PRETTY_PRINT);
+        ], 200, [], JSON_PRETTY_PRINT);
     }
 
-    public function farming(Request $request){
+    public function farming(Request $request)
+    {
         $userId = $request->input('userTgId');
-        $reward = DB::table('reward_masters')->where('type','farming')->select('amount')->first();
+        $reward = DB::table('reward_masters')->where('type', 'farming')->select('amount')->first();
         $start = Carbon::now('Asia/Jakarta');
-        $target=  Carbon::parse($start)->addHours(8);
-        $farming= Farming::create([
+        $target = Carbon::parse($start)->addHours(8);
+        $farming = Farming::create([
             'userTgId' => $userId,
             'transactionId' => Str::uuid(),
             'startFarmingDate' => $start,
@@ -110,73 +118,52 @@ class Members extends Controller
         ]);
         $startFarm = Carbon::parse($farming->startFarmingDate);
         $targetFarm = Carbon::parse($farming->targetFarmingDate);
-
-        $farming->startFarmingDate = [
-            $startFarm->year,
-            $startFarm->month == 1 ? 0 : $startFarm->month - 1,
-            $startFarm->day,
-            $startFarm->hour,
-            $startFarm->minute,
-            $startFarm->second,
-        ];
-        $farming->targetFarmingDate = [
-            $targetFarm->year,
-            $targetFarm->month == 1 ? 0 : $targetFarm->month - 1,
-            $targetFarm->day,
-            $targetFarm->hour,
-            $targetFarm->minute,
-            $targetFarm->second,
-        ];
-
-        return Response()->json(['data' => $farming],200,[],JSON_PRETTY_PRINT);        
+        $start = $startFarm->format('Y-m-d H:i:s');
+        $target = $targetFarm->format('Y-m-d H:i:s');
+        return Response()->json([
+            'data' => $farming,
+            'start' => $start,
+            'target' => $target
+        ], 200, [], JSON_PRETTY_PRINT);
     }
 
 
-    public function getFarming(Request $request){
+    public function getFarming(Request $request)
+    {
         $userId = $request->input('userTgId');
         $farm = Farming::where([
             'userTgId' => $userId,
-            'status'   => 'farming'
-        ]); 
-        if($farm->count() > 0){
+            'status' => 'farming'
+        ]);
+        if ($farm->count() > 0) {
             $data = $farm->first();
             $startFarm = Carbon::parse($data->startFarmingDate);
             $targetFarm = Carbon::parse($data->targetFarmingDate);
-
-            $data->startFarmingDate = [
-                $startFarm->year,
-                $startFarm->month == 1 ? 0 : $startFarm->month - 1,
-                $startFarm->day,
-                $startFarm->hour,
-                $startFarm->minute,
-                $startFarm->second,
-            ];
-            $data->targetFarmingDate = [
-                $targetFarm->year,
-                $targetFarm->month == 1 ? 0 : $targetFarm->month - 1,
-                $targetFarm->day,
-                $targetFarm->hour,
-                $targetFarm->minute,
-                $targetFarm->second,
-            ];
+            $start = $startFarm->format('Y-m-d H:i:s');
+            $target = $targetFarm->format('Y-m-d H:i:s');
         }
-        return Response()->json(['data' => $data ?? $farm->first()],200,[],JSON_PRETTY_PRINT);
+        return Response()->json([
+            'data' => $data ?? $farm->first(),
+            'start' => $start,
+            'target' => $target
+        ], 200, [], JSON_PRETTY_PRINT);
     }
 
-    public function claim(Request $request){
+    public function claim(Request $request)
+    {
         $userId = $request->input('userTgId');
         $farm = Farming::where([
             'userTgId' => $userId,
-            'status'   => 'farming'
-        ])->update(['status' => 'claimed']); 
+            'status' => 'farming'
+        ])->update(['status' => 'claimed']);
         $balance = Balance::where(['userTgId' => $userId])->first();
-        if($farm){
+        if ($farm) {
             $reward = DB::table('reward_masters')->where(['type' => 'farming'])->select('amount')->first();
             $balance->balance = $balance->balance + $reward->amount;
             $balance->save();
-            return Response()->json(['balance' =>  number_format($balance->balance,0,",","."), 'claim' => "yes"],200,[],JSON_PRETTY_PRINT);                
+            return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "yes"], 200, [], JSON_PRETTY_PRINT);
         }
-        return Response()->json(['balance' => number_format($balance->balance,0,",","."), 'claim' => "no"],200,[],JSON_PRETTY_PRINT);                
+        return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "no"], 200, [], JSON_PRETTY_PRINT);
 
     }
 }

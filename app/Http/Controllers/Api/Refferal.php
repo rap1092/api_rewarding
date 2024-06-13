@@ -20,8 +20,9 @@ class Refferal extends Controller
         $totalReward = number_format(TgMemberReff::where(['userTgId'=>$userId])->sum('amount'),0,",",".");
         $fromRefferal= DB::table('reward_refferals')
                             ->join('members','members.userTgId','=','reward_refferals.userTgIdJoined')
+                            ->join('balances','balances.userTgId','=','reward_refferals.userTgIdJoined')
                        ->where(['reward_refferals.userTgId'=>$userId])
-                       ->select('reward_refferals.amount','members.fullname')
+                       ->select('reward_refferals.amount','members.fullname','balances.balance')
                        ->orderBy('reward_refferals.id','desc')->get();
         $rewardPerRef= DB::table('reward_masters')->where(['type' => 'refferal'])
                         ->select('amount')->first();
@@ -31,6 +32,7 @@ class Refferal extends Controller
             array_push($data,[
                 'fullname' => $item->fullname,
                 'amount' => $this->formatNumber($item->amount),
+                'balance' => $this->formatNumber($item->balance),
             ]);
         }
         return Response()->json([

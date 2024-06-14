@@ -146,7 +146,7 @@ class Members extends Controller
             'data' => $data ?? $farm->first(),
             'start' => $start ?? null,
             'target' => $target ?? null,
-            'perseconds' => $data ? $data->amount / 86400 : 1 
+            'perseconds' => $farm->count() > 0 ? $data->amount / 86400 : 1 
         ], 200, [], JSON_PRETTY_PRINT);
     }
 

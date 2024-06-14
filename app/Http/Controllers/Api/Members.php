@@ -124,7 +124,7 @@ class Members extends Controller
             'data' => $farming,
             'start' => $start ?? null,
             'target' => $target ?? null,
-            'perseconds' => $farming ? (float)($farming->amount / 28800) : 1 
+            'perseconds' => $farming ? (float)($farming->reward / 28800) : 1 
         ], 200, [], JSON_PRETTY_PRINT);
     }
 
@@ -147,7 +147,7 @@ class Members extends Controller
             'data' => $data ?? $farm->first(),
             'start' => $start ?? null,
             'target' => $target ?? null,
-            'perseconds' => $farm->count() > 0 ? (float) ($data->amount / 28800) : 1 
+            'perseconds' => $farm->count() > 0 ? (float) ($data->reward / 28800) : 1 
         ], 200, [], JSON_PRETTY_PRINT);
     }
 

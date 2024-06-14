@@ -144,8 +144,9 @@ class Members extends Controller
         }
         return Response()->json([
             'data' => $data ?? $farm->first(),
-            'start' => $start,
-            'target' => $target
+            'start' => $start ?? null,
+            'target' => $target ?? null,
+            'perseconds' => $data ? $data->amount / 86400 : 1 
         ], 200, [], JSON_PRETTY_PRINT);
     }
 

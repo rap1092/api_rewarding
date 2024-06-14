@@ -122,8 +122,9 @@ class Members extends Controller
         $target = $targetFarm->format('Y-m-d H:i:s');
         return Response()->json([
             'data' => $farming,
-            'start' => $start,
-            'target' => $target
+            'start' => $start ?? null,
+            'target' => $target ?? null,
+            'perseconds' => $farming ? $farming->amount / 86400 : 1 
         ], 200, [], JSON_PRETTY_PRINT);
     }
 

@@ -43,22 +43,18 @@ class Refferal extends Controller
         ],200,[],JSON_PRETTY_PRINT);
     }
 
-    function formatNumber($number) {
+    function formatNumber($number)
+    {
         if ($number >= 1e12) {
-            // Triliunan
-            return number_format($number / 1e12, 0) . 'T';
+            return round($number / 1e12, 2) . 'T';
         } elseif ($number >= 1e9) {
-            // Milyaran
-            return number_format($number / 1e9, 0) . 'B';
+            return round($number / 1e9, 2) . 'B';
         } elseif ($number >= 1e6) {
-            // Jutaan
-            return number_format($number / 1e6, 0) . 'M';
+            return round($number / 1e6, 2) . 'M';
         } elseif ($number >= 1e3) {
-            // Ribuan
-            return number_format($number / 1e3, 0) . 'K';
+            return round($number / 1e3, 2) . 'K';
+        } else {
+            return $number;
         }
-    
-        return number_format($number, 0);
     }
-    
 }

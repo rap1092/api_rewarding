@@ -91,7 +91,13 @@ class Tasks extends Controller
             ]);
             return Response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
         }
-        return Response()->json(['status' => false], 500, [], JSON_PRETTY_PRINT);
+        else{
+            $create = UserTasks::where([
+                'userTgId' => $userId,
+                'taskId' => $taskId,
+            ])->update(['status' => '2']);
+            return Response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
+        }
 
     }
 

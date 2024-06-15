@@ -25,6 +25,7 @@ class Tasks extends Controller
                 'taskId' => $item->id
             ]);
             if ($check->count() > 0) {
+                $this->TaskReset($request->input('userTgId'));
                 $row = $check->first();
                 if ($row->status !== '3') {
                     array_push($tasks, [
@@ -54,6 +55,22 @@ class Tasks extends Controller
             }
         }
         return Response()->json($tasks);
+    }
+
+    public function TaskReset($userId)
+    {
+        $tasks = DB::table('tasks_rewards')
+            ->where('type', 'always_exist')
+            ->select('id')
+            ->get();
+        $ids = $tasks->pluck('id');
+        
+        $check = UserTasks::where('userTgId', $userId)
+            ->where('status', 3)
+            ->whereIn('taskId', $ids)
+            ->where('updated_at', '<', Carbon::now()->subMinutes(30))
+            ->update(['status' => 1]);
+        return true;
     }
 
     public function claimCreate(Request $request)

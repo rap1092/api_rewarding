@@ -30,7 +30,7 @@ class Tasks extends Controller
                 if ($row->status !== '3') {
                     array_push($tasks, [
                         'userTgId' => $row->userTgId,
-                        'taskId' => $row->taskId,
+                        'taskId' => (int) $row->taskId,
                         'amount' => $this->formatNumber($item->amount),
                         'icon' => $item->remixicon,
                         'title' => $item->title,
@@ -43,7 +43,7 @@ class Tasks extends Controller
             } else {
                 array_push($tasks, [
                     'userTgId' => $request->input('userTgId'),
-                    'taskId' => $item->id,
+                    'taskId' => (int) $item->id,
                     'amount' => $this->formatNumber($item->amount),
                     'icon' => $item->remixicon,
                     'title' => $item->title,

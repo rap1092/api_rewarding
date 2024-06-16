@@ -33,6 +33,7 @@ class Members extends Controller
                 'usernameTg' => $usrname,
                 'userinfo'  =>  $_SERVER['HTTP_USER_AGENT'] ?? '',
                 'uri'  => $_SERVER['REQUEST_URI'] ?? '',
+                'org'  => $this->getOrg($data),
                 'referer'  => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
                 'country' => $this->getCountry($data),
                 'city' => $this->getCity($data),
@@ -59,7 +60,9 @@ class Members extends Controller
                 'userTgId' => $userId,
             ])->update([
                 'userinfo'  =>  $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'ipaddress'  =>  $this->getUserIpAddress() ?? '',
                 'uri'  => $_SERVER['REQUEST_URI'] ?? '',
+                'org'  => $this->getOrg($data),
                 'referer'  => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
                 'country' => $this->getCountry($data),
                 'city' => $this->getCity($data),

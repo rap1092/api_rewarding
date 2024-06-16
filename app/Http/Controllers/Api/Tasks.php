@@ -95,7 +95,7 @@ class Tasks extends Controller
             $create = UserTasks::where([
                 'userTgId' => $userId,
                 'taskId' => $taskId,
-            ])->update(['status' => '2']);
+            ])->update(['status' => '2','amount' => $data->amount]);
             return Response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
         }
 

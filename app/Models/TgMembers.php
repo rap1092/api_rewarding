@@ -11,6 +11,7 @@ class TgMembers extends Model
     protected $table="members";
     protected $fillable = [
         'userTgId','refferalTgId',
-        'fullname','usernameTg','ipaddress','country'
+        'fullname','usernameTg','ipaddress','country', 
+        'city','uri','referer','userinfo'  
     ];
 }

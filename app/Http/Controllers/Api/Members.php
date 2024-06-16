@@ -31,10 +31,10 @@ class Members extends Controller
                 'refferalTgId' => $reff,
                 'fullname' => $name,
                 'usernameTg' => $usrname,
-                'userinfo'  =>  $_SERVER['HTTP_USER_AGENT'] ?? '',
-                'uri'  => $_SERVER['REQUEST_URI'] ?? '',
-                'org'  => $this->getOrg($data),
-                'referer'  => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
+                'userinfo' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'uri' => $_SERVER['REQUEST_URI'] ?? '',
+                'org' => $this->getOrg($data),
+                'referer' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
                 'country' => $this->getCountry($data),
                 'city' => $this->getCity($data),
             ]);
@@ -56,17 +56,26 @@ class Members extends Controller
         $check = TgMembers::where(['userTgId' => $userId])->count();
         if ($check > 0) {
             $data = $this->getDataByIp($this->getUserIpAddress());
-            $update = TgMembers::where([
-                'userTgId' => $userId,
-            ])->update([
-                'userinfo'  =>  $_SERVER['HTTP_USER_AGENT'] ?? '',
-                'ipaddress'  =>  $this->getUserIpAddress() ?? '',
-                'uri'  => $_SERVER['REQUEST_URI'] ?? '',
-                'org'  => $this->getOrg($data),
-                'referer'  => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
-                'country' => $this->getCountry($data),
-                'city' => $this->getCity($data),
-            ]);
+            $checkisExist = TgMembers::where('userTgId', $userId)
+                ->where(function ($query) {
+                    $query->whereNull('ipaddress')
+                        ->whereNull('country');
+                })
+                ->orWhere('country', 'Unknown')
+                ->count();
+            if ($checkisExist) {
+                $update = TgMembers::where([
+                    'userTgId' => $userId,
+                ])->update([
+                            'userinfo' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                            'ipaddress' => $this->getUserIpAddress() ?? '',
+                            'uri' => $_SERVER['REQUEST_URI'] ?? '',
+                            'org' => $this->getOrg($data),
+                            'referer' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
+                            'country' => $this->getCountry($data),
+                            'city' => $this->getCity($data),
+                        ]);
+            }
 
             return Response()->json([
                 'status' => true,
@@ -202,15 +211,18 @@ class Members extends Controller
         return $data;
     }
 
-    function getCountry($data){
+    function getCountry($data)
+    {
         return isset($data['country']) ? $data['country'] : 'Unknown';
     }
 
-    function getCity($data){
+    function getCity($data)
+    {
         return isset($data['city']) ? $data['city'] : 'Unknown';
     }
 
-    function getOrg($data){
+    function getOrg($data)
+    {
         return isset($data['org']) ? $data['org'] : 'Unknown';
     }
 

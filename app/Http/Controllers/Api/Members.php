@@ -192,7 +192,7 @@ class Members extends Controller
 
     function getDataByIp($ip)
     {
-        $apiUrl = "http://ipinfo.io/{$ip}/json";
+        $apiUrl = "http://ip-api.com/json/{$ip}";
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

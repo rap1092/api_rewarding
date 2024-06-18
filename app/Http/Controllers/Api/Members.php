@@ -133,7 +133,7 @@ class Members extends Controller
         });
 
         $start = Carbon::now('Asia/Jakarta');
-        $target = $start->copy()->addHours(8);
+        $target = Carbon::parse($start)->addHours(8);
 
         $farming = Farming::create([
             'userTgId' => $userId,

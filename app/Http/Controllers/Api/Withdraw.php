@@ -19,7 +19,7 @@ class Withdraw extends Controller
            return $airdrop = DB::table('countdowns')->where('type', 'airdrop')->first();
         });
         $fairlaunch = Cache::remember('fairlaunch', 3600, function () {
-            return $airdrop = DB::table('countdowns')->where('type', 'airdrop')->first();
+            return $airdrop = DB::table('countdowns')->where('type', 'fairlaunch')->first();
         });
         $dateAirdrop = Carbon::parse($airdrop->endTime);
         $airdrop = [

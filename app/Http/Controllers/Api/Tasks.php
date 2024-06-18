@@ -29,6 +29,7 @@ class Tasks extends Controller
 
         $formattedTasks = $tasks->map(function ($task) use ($userTgId) {
             if (!is_null($task->user_task_userTgId)) {
+                $this->TaskReset($userTgId);
                 if ($task->status !== '3') {
                     return [
                         'userTgId' => $task->user_task_userTgId,

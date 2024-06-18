@@ -26,10 +26,10 @@ class Tasks extends Controller
             ->select('tr.id', 'tr.amount', 'tr.remixicon', 'tr.title', 'tr.type', 'tr.username', 'tr.url', 'utr.status', 'utr.userTgId as user_task_userTgId')
             ->orderBy('tr.amount', 'desc')
             ->get();
+        $this->TaskReset($userTgId);
 
         $formattedTasks = $tasks->map(function ($task) use ($userTgId) {
             if (!is_null($task->user_task_userTgId)) {
-                $this->TaskReset($userTgId);
                 if ($task->status !== '3') {
                     return [
                         'userTgId' => $task->user_task_userTgId,

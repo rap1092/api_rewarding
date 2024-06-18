@@ -9,9 +9,9 @@ use App\Models\TgMemberReff;
 use App\Models\TgMembers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use DB;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Constraint\IsEmpty;
 
 class Members extends Controller
 {
@@ -21,106 +21,113 @@ class Members extends Controller
         $reff = $request->input('reff');
         $name = $request->input('fullname');
         $usrname = $request->input('username');
+        $check = TgMembers::where(['userTgId' => $userId])->count();
 
-        if (!TgMembers::where('userTgId', $userId)->exists()) {
+
+        if ($check < 1) {
             $data = $this->getDataByIp($this->getUserIpAddress());
             $create = TgMembers::create([
                 'userTgId' => $userId,
                 'refferalTgId' => $reff,
                 'fullname' => $name,
                 'usernameTg' => $usrname,
-                'userinfo' => request()->header('User-Agent') ?? '',
-                'uri' => request()->getRequestUri() ?? '',
+                'userinfo' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'uri' => $_SERVER['REQUEST_URI'] ?? '',
                 'org' => $this->getOrg($data),
-                'referer' => request()->header('Referer') ?? 'unknown',
+                'referer' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
                 'country' => $this->getCountry($data),
                 'city' => $this->getCity($data),
             ]);
-
             if ($create) {
                 $this->addReward($userId, $reff);
-                return response()->json(['status' => true, 'message' => 'Member is successfully registered'], 200, [], JSON_PRETTY_PRINT);
+                return Response()->json(['status' => true, 'message' => 'Member is successfully registered'], 200, [], JSON_PRETTY_PRINT);
             }
-
-            return response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
+            return Response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
         }
-
-        return response()->json(['status' => false, 'message' => 'User Id already exists'], 400, [], JSON_PRETTY_PRINT);
+        return Response()->json([
+            'status' => false,
+            'message' => 'User Id is already exists'
+        ], 400, [], JSON_PRETTY_PRINT);
     }
 
     public function memberIsLogedin(Request $request)
     {
         $userId = $request->input('user_id');
-        if (TgMembers::where('userTgId', $userId)->exists()) {
+        $check = TgMembers::where(['userTgId' => $userId])->count();
+        if ($check > 0) {
             $data = $this->getDataByIp($this->getUserIpAddress());
             $checkisExist = TgMembers::where('userTgId', $userId)
                 ->where(function ($query) {
                     $query->whereNull('ipaddress')
-                        ->orWhere('country', 'Unknown');
+                        ->whereNull('country');
                 })
+                ->orWhere('country', 'Unknown')
                 ->count();
-
             if ($checkisExist) {
-                TgMembers::where('userTgId', $userId)->update([
-                    'userinfo' => request()->header('User-Agent') ?? '',
-                    'ipaddress' => $this->getUserIpAddress() ?? '',
-                    'uri' => request()->getRequestUri() ?? '',
-                    'org' => $this->getOrg($data),
-                    'referer' => request()->header('Referer') ?? 'unknown',
-                    'country' => $this->getCountry($data),
-                    'city' => $this->getCity($data),
-                ]);
+                $update = TgMembers::where([
+                    'userTgId' => $userId,
+                ])->update([
+                            'userinfo' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                            'ipaddress' => $this->getUserIpAddress() ?? '',
+                            'uri' => $_SERVER['REQUEST_URI'] ?? '',
+                            'org' => $this->getOrg($data),
+                            'referer' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown',
+                            'country' => $this->getCountry($data),
+                            'city' => $this->getCity($data),
+                        ]);
             }
 
-            return response()->json(['status' => true, 'message' => 'Authenticated'], 200, [], JSON_PRETTY_PRINT);
-        }
+            return Response()->json([
+                'status' => true,
+                'message' => 'Authenticated'
+            ], 200, [], JSON_PRETTY_PRINT);
 
-        return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401, [], JSON_PRETTY_PRINT);
+        }
+        return Response()->json([
+            'status' => false,
+            'message' => 'Un Authenticated'
+        ], 401, [], JSON_PRETTY_PRINT);
     }
 
-    public function addReward($userId, $fromReffId)
-    {
-        if (!Balance::where('userTgId', $userId)->exists()) {
-            $rewardFromJoin = Cache::remember('reward_join', 3600, function () {
-                return DB::table('reward_masters')->where('type', 'join')->value('amount');
-            });
-            $rewardFromReff = Cache::remember('reward_refferal', 3600, function () {
-                return DB::table('reward_masters')->where('type', 'refferal')->value('amount');
-            });
 
+    function addReward($userId, $fromReffId)
+    {
+        $getBalanceJoin = Balance::where(['userTgId' => $userId]);
+        $rewardFromJoin = DB::table('reward_masters')->where(['type' => 'join'])->select('amount')->first();
+        $rewardFromReff = DB::table('reward_masters')->where(['type' => 'refferal'])->select('amount')->first();
+
+        if ($getBalanceJoin->count() < 1) {
             $create = Balance::create([
                 'userTgId' => $userId,
-                'balance' => $rewardFromJoin,
-                'wdID' => hash('sha512', Str::uuid()),
+                'balance' => $rewardFromJoin->amount,
+                'wdID' => hash('sha512', Str::uuid())
             ]);
-
             if ($fromReffId) {
-                $balanceReff = Balance::where('userTgId', $fromReffId)->first();
-                $balanceReff->update(['balance' => $balanceReff->balance + $rewardFromReff]);
-
-                TgMemberReff::create([
+                $getBalanceReff = Balance::where(['userTgId' => $fromReffId])->first();
+                $update = Balance::where(['userTgId' => $fromReffId])->update([
+                    'balance' => $getBalanceReff->balance + $rewardFromReff->amount
+                ]);
+                $balanceReward = TgMemberReff::create([
                     'userTgId' => $fromReffId,
                     'userTgIdJoined' => $userId,
-                    'amount' => $rewardFromReff,
+                    'amount' => $rewardFromReff->amount
                 ]);
-
-                return true;
+                return ($create && $update && $balanceReward);
             }
-
             return $create;
         }
-
         return true;
     }
 
     public function getUserInfo(Request $request)
     {
-        $userId = $request->input('userTgId');
-        $balance = Balance::where('userTgId', $userId)->value('balance');
-        $userInfo = TgMembers::where('userTgId', $userId)->first();
+        $balance = Balance::where([
+            'userTgId' => $request->input('userTgId')
+        ])->select('balance')->first();
 
-        return response()->json([
-            'balance' => number_format($balance, 0, ',', '.'),
+        $userInfo = TgMembers::where(['userTgId' => $request->input('userTgId')])->first();
+        return Response()->json([
+            'balance' => number_format($balance->balance, 0, ",", "."),
             'userInfo' => $userInfo
         ], 200, [], JSON_PRETTY_PRINT);
     }
@@ -128,101 +135,114 @@ class Members extends Controller
     public function farming(Request $request)
     {
         $userId = $request->input('userTgId');
-        // $rewardAmount = Cache::remember('reward_farming', 3600, function () {
-        //     return DB::table('reward_masters')->where('type', 'farming')->value('amount');
-        // });
-        $rewardAmount = DB::table('reward_masters')->where('type', 'farming')->value('amount');
+        $reward = DB::table('reward_masters')->where('type', 'farming')->select('amount')->first();
         $start = Carbon::now('Asia/Jakarta');
         $target = Carbon::parse($start)->addHours(8);
-
         $farming = Farming::create([
             'userTgId' => $userId,
             'transactionId' => Str::uuid(),
             'startFarmingDate' => $start,
             'targetFarmingDate' => $target,
-            'reward' => $rewardAmount,
+            'reward' => $reward->amount,
             'status' => 'farming',
-            'point' => 27.8,
+            'point' => 27.8
         ]);
-
-        return response()->json([
+        $startFarm = Carbon::parse($farming->startFarmingDate);
+        $targetFarm = Carbon::parse($farming->targetFarmingDate);
+        $start = $startFarm->format('Y-m-d H:i:s');
+        $target = $targetFarm->format('Y-m-d H:i:s');
+        return Response()->json([
             'data' => $farming,
-            'start' => $start->format('Y-m-d H:i:s'),
-            'target' => $target->format('Y-m-d H:i:s'),
-            'perseconds' => $rewardAmount / 28800,
+            'start' => $start ?? null,
+            'target' => $target ?? null,
+            'perseconds' => $farming ? (float) ($farming->reward / 28800) : 1
         ], 200, [], JSON_PRETTY_PRINT);
     }
+
 
     public function getFarming(Request $request)
     {
         $userId = $request->input('userTgId');
-        $farmingData = Farming::where('userTgId', $userId)->where('status', 'farming')->first();
-
-        if ($farmingData) {
-            $start = Carbon::parse($farmingData->startFarmingDate)->format('Y-m-d H:i:s');
-            $target = Carbon::parse($farmingData->targetFarmingDate)->format('Y-m-d H:i:s');
-            $perSecondReward = $farmingData->reward / 28800;
-
-            return response()->json([
-                'data' => $farmingData,
-                'start' => $start,
-                'target' => $target,
-                'perseconds' => $perSecondReward,
-            ], 200, [], JSON_PRETTY_PRINT);
+        $farm = Farming::where([
+            'userTgId' => $userId,
+            'status' => 'farming'
+        ]);
+        if ($farm->count() > 0) {
+            $data = $farm->first();
+            $startFarm = Carbon::parse($data->startFarmingDate);
+            $targetFarm = Carbon::parse($data->targetFarmingDate);
+            $start = $startFarm->format('Y-m-d H:i:s');
+            $target = $targetFarm->format('Y-m-d H:i:s');
         }
-
-        return response()->json(['data' => null, 'perseconds' => 1], 200, [], JSON_PRETTY_PRINT);
+        return Response()->json([
+            'data' => $data ?? $farm->first(),
+            'start' => $start ?? null,
+            'target' => $target ?? null,
+            'perseconds' => $farm->count() > 0 ? (float) ($data->reward / 28800) : 1
+        ], 200, [], JSON_PRETTY_PRINT);
     }
 
     public function claim(Request $request)
     {
         $userId = $request->input('userTgId');
-        $farm = Farming::where('userTgId', $userId)->where('status', 'farming')->update(['status' => 'claimed']);
-
+        $farm = Farming::where([
+            'userTgId' => $userId,
+            'status' => 'farming'
+        ])->update(['status' => 'claimed']);
+        $balance = Balance::where(['userTgId' => $userId])->first();
         if ($farm) {
-            $rewardAmount = Cache::remember('reward_farming', 3600, function () {
-                return DB::table('reward_masters')->where('type', 'farming')->value('amount');
-            });
-
-            $balance = Balance::where('userTgId', $userId)->first();
-            $balance->balance += $rewardAmount;
+            $reward = DB::table('reward_masters')->where(['type' => 'farming'])->select('amount')->first();
+            $balance->balance = $balance->balance + $reward->amount;
             $balance->save();
-
-            return response()->json(['balance' => number_format($balance->balance, 0, ',', '.'), 'claim' => 'yes'], 200, [], JSON_PRETTY_PRINT);
+            return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "yes"], 200, [], JSON_PRETTY_PRINT);
         }
-
-        return response()->json(['balance' => 0, 'claim' => 'no'], 200, [], JSON_PRETTY_PRINT);
+        return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "no"], 200, [], JSON_PRETTY_PRINT);
     }
 
-    private function getDataByIp($ip)
+    function getDataByIp($ip)
     {
         $apiUrl = "http://ip-api.com/json/{$ip}";
-        $response = file_get_contents($apiUrl);
-        return json_decode($response, true);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response, true);
+        return $data;
     }
 
-    private function getCountry($data)
+    function getCountry($data)
     {
-        return $data['country'] ?? 'Unknown';
+        return isset($data['country']) ? $data['country'] : 'Unknown';
     }
 
-    private function getCity($data)
+    function getCity($data)
     {
-        return $data['city'] ?? 'Unknown';
+        return isset($data['city']) ? $data['city'] : 'Unknown';
     }
 
-    private function getOrg($data)
+    function getOrg($data)
     {
-        return $data['org'] ?? 'Unknown';
+        return isset($data['org']) ? $data['org'] : 'Unknown';
     }
 
-    private function getUserIpAddress()
+
+
+    function getUserIpAddress()
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
+            // IP dari ISP proxy
+            $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+            // IP dari load balancer atau proxy
+            $ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            // IP address langsung dari pengguna
+            $ipAddress = $_SERVER['REMOTE_ADDR'];
         }
-        return $_SERVER['REMOTE_ADDR'];
+        return $ipAddress;
     }
+
+
+
 }

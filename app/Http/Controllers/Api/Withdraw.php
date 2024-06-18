@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 class Withdraw extends Controller
 {
-    protected $fairlaunchLink = "https://www.pinksale.finance/solana/launchpad/847ctLdjnY3dxxuHgPFBZW9NGEaMf3keFeBq7Yo4wDYc";
+    protected $fairlaunchLink = "https://www.pinksale.finance/solana/launchpad/9nAFikRNTRwqaFvt2V6N4FCQ5GS7thTPHLqbsfMPjKoM";
 
     public function getTime(Request $request)
     {

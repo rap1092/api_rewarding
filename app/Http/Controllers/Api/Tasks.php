@@ -17,45 +17,98 @@ class Tasks extends Controller
 {
     public function getTasks(Request $request)
     {
-        $task = DB::table('tasks_rewards')->orderBy('amount', 'desc')->get();
-        $tasks = [];
-        foreach ($task as $item) {
-            $check = DB::table('user_tasks_rewards')->where([
-                'userTgId' => $request->input('userTgId'),
-                'taskId' => $item->id
-            ]);
-            if ($check->count() > 0) {
-                $this->TaskReset($request->input('userTgId'));
-                $row = $check->first();
-                if ($row->status !== '3') {
-                    array_push($tasks, [
-                        'userTgId' => $row->userTgId,
-                        'taskId' => (int) $row->taskId,
-                        'amount' => $this->formatNumber($item->amount),
-                        'icon' => $item->remixicon,
-                        'title' => $item->title,
-                        'type' => $item->type,
-                        'username' => $item->username,
-                        'url' => $item->url,
-                        'status' => $row->status
-                    ]);
+        $userTgId = $request->input('userTgId');
+
+        // Ambil semua data task dan join dengan user_tasks_rewards
+        $tasks = DB::table('tasks_rewards as tr')
+            ->leftJoin('user_tasks_rewards as utr', function($join) use ($userTgId) {
+                $join->on('tr.id', '=', 'utr.taskId')
+                     ->where('utr.userTgId', '=', $userTgId);
+            })
+            ->select('tr.*', 'utr.status', 'utr.userTgId as user_task_userTgId', 'utr.taskId as user_task_taskId')
+            ->orderBy('tr.amount', 'desc')
+            ->get();
+    
+        $formattedTasks = [];
+        foreach ($tasks as $task) {
+            // Jika user_task_userTgId tidak null, berarti user sudah pernah mengakses task tersebut
+            if (!is_null($task->user_task_userTgId)) {
+                // Panggil TaskReset jika diperlukan
+                $this->TaskReset($userTgId);
+    
+                // Hanya tambahkan task jika statusnya tidak 3
+                if ($task->status !== '3') {
+                    $formattedTasks[] = [
+                        'userTgId' => $task->user_task_userTgId,
+                        'taskId' => (int) $task->id,
+                        'amount' => $this->formatNumber($task->amount),
+                        'icon' => $task->remixicon,
+                        'title' => $task->title,
+                        'type' => $task->type,
+                        'username' => $task->username,
+                        'url' => $task->url,
+                        'status' => $task->status,
+                    ];
                 }
             } else {
-                array_push($tasks, [
-                    'userTgId' => $request->input('userTgId'),
-                    'taskId' => (int) $item->id,
-                    'amount' => $this->formatNumber($item->amount),
-                    'icon' => $item->remixicon,
-                    'title' => $item->title,
-                    'url' => $item->url,
-                    'type' => $item->type,
-                    'username' => $item->username,
-                    'status' => '1'
-                ]);
+                // Jika user belum pernah mengakses task tersebut, tambahkan dengan status default 1
+                $formattedTasks[] = [
+                    'userTgId' => $userTgId,
+                    'taskId' => (int) $task->id,
+                    'amount' => $this->formatNumber($task->amount),
+                    'icon' => $task->remixicon,
+                    'title' => $task->title,
+                    'url' => $task->url,
+                    'type' => $task->type,
+                    'username' => $task->username,
+                    'status' => '1',
+                ];
             }
         }
-        return Response()->json($tasks);
+    
+        return response()->json($formattedTasks);
     }
+    // public function getTasks(Request $request)
+    // {
+    //     $task = DB::table('tasks_rewards')->orderBy('amount', 'desc')->get();
+    //     $tasks = [];
+    //     foreach ($task as $item) {
+    //         $check = DB::table('user_tasks_rewards')->where([
+    //             'userTgId' => $request->input('userTgId'),
+    //             'taskId' => $item->id
+    //         ]);
+    //         if ($check->count() > 0) {
+    //             $this->TaskReset($request->input('userTgId'));
+    //             $row = $check->first();
+    //             if ($row->status !== '3') {
+    //                 array_push($tasks, [
+    //                     'userTgId' => $row->userTgId,
+    //                     'taskId' => (int) $row->taskId,
+    //                     'amount' => $this->formatNumber($item->amount),
+    //                     'icon' => $item->remixicon,
+    //                     'title' => $item->title,
+    //                     'type' => $item->type,
+    //                     'username' => $item->username,
+    //                     'url' => $item->url,
+    //                     'status' => $row->status
+    //                 ]);
+    //             }
+    //         } else {
+    //             array_push($tasks, [
+    //                 'userTgId' => $request->input('userTgId'),
+    //                 'taskId' => (int) $item->id,
+    //                 'amount' => $this->formatNumber($item->amount),
+    //                 'icon' => $item->remixicon,
+    //                 'title' => $item->title,
+    //                 'url' => $item->url,
+    //                 'type' => $item->type,
+    //                 'username' => $item->username,
+    //                 'status' => '1'
+    //             ]);
+    //         }
+    //     }
+    //     return Response()->json($tasks);
+    // }
 
     public function TaskReset($userId)
     {

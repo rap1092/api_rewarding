@@ -7,6 +7,7 @@ use App\Models\Balance;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class Withdraw extends Controller
 {
@@ -14,8 +15,12 @@ class Withdraw extends Controller
 
     public function getTime(Request $request)
     {
-        $airdrop = DB::table('countdowns')->where('type', 'airdrop')->first();
-        $fairlaunch = DB::table('countdowns')->where('type', 'fairlaunch')->first();
+        $airdrop = Cache::remember('airdrop', 3600, function () {
+           return $airdrop = DB::table('countdowns')->where('type', 'airdrop')->first();
+        });
+        $fairlaunch = Cache::remember('fairlaunch', 3600, function () {
+            return $airdrop = DB::table('countdowns')->where('type', 'airdrop')->first();
+        });
         $dateAirdrop = Carbon::parse($airdrop->endTime);
         $airdrop = [
             'year' => $dateAirdrop->year,

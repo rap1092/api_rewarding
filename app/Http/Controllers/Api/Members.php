@@ -132,7 +132,7 @@ class Members extends Controller
             return DB::table('reward_masters')->where('type', 'farming')->value('amount');
         });
         // $rewardAmount = DB::table('reward_masters')->where('type', 'farming')->value('amount');
-        $start = Carbon::now('Asia/Jakarta')->subMinutes(1);
+        $start = Carbon::now('Asia/Jakarta')->subSeconds(20);
         $target = Carbon::parse($start)->addHours(8);
 
         $farming = Farming::create([

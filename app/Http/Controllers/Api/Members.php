@@ -128,10 +128,10 @@ class Members extends Controller
     public function farming(Request $request)
     {
         $userId = $request->input('userTgId');
-        $rewardAmount = Cache::remember('reward_farming', 3600, function () {
-            return DB::table('reward_masters')->where('type', 'farming')->value('amount');
-        });
-
+        // $rewardAmount = Cache::remember('reward_farming', 3600, function () {
+        //     return DB::table('reward_masters')->where('type', 'farming')->value('amount');
+        // });
+        $rewardAmount = DB::table('reward_masters')->where('type', 'farming')->value('amount');
         $start = Carbon::now('Asia/Jakarta');
         $target = Carbon::parse($start)->addHours(8);
 

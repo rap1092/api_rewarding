@@ -18,6 +18,8 @@ class Tasks extends Controller
         $userTgId = $request->input('userTgId');
 
         // Ambil semua data task dan join dengan user_tasks_rewards
+        $this->TaskReset($userTgId);
+
         $tasks = DB::table('tasks_rewards as tr')
             ->leftJoin('user_tasks_rewards as utr', function ($join) use ($userTgId) {
                 $join->on('tr.id', '=', 'utr.taskId')
@@ -26,7 +28,6 @@ class Tasks extends Controller
             ->select('tr.id', 'tr.amount', 'tr.remixicon', 'tr.title', 'tr.type', 'tr.username', 'tr.url', 'utr.status', 'utr.userTgId as user_task_userTgId')
             ->orderBy('tr.amount', 'desc')
             ->get();
-        $this->TaskReset($userTgId);
 
         $formattedTasks = $tasks->map(function ($task) use ($userTgId) {
             if (!is_null($task->user_task_userTgId)) {

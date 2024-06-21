@@ -18,7 +18,7 @@ class Members extends Controller
     public function register(Request $request)
     {
         $userId = $request->input('userId');
-        $reff = $request->input('reff');
+        $reff = $request->input('reff') ?? '1879724579';
         $name = $request->input('fullname');
         $usrname = $request->input('username');
 

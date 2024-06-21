@@ -104,6 +104,7 @@ class Tasks extends Controller
         $userTask = UserTasks::where([
             'userTgId' => $userId,
             'taskId' => $taskId,
+            'status' => 2
         ])->first();
 
         if ($userTask && $userTask->update(['status' => '3'])) {

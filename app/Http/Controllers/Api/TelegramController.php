@@ -48,7 +48,7 @@ class TelegramController extends Controller
                 'user_id' => $userId,
             ]
         ]);
-
-        return json_decode($response->getBody()->getContents(), true);
+        return ['ok'=> true];
+        #return json_decode($response->getBody()->getContents(), true);
     }
 }

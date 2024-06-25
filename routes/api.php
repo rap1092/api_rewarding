@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Members;
+use App\Http\Controllers\Api\TelegramController;
 use App\Http\Controllers\Api\Refferal;
 use App\Http\Controllers\Api\Tasks;
 use App\Http\Controllers\Api\Withdraw;
@@ -22,3 +23,8 @@ Route::post('/refferal/getinfo',[Refferal::class,'getInfo']);
 Route::post('/tasks/getinfo',[Tasks::class,'getTasks']);
 Route::post('/tasks/claimCreate',[Tasks::class,'claimCreate']);
 Route::post('/tasks/claim',[Tasks::class,'claim']);
+Route::post('/cl/getinfo',[Withdraw::class,'claim']);
+Route::post('/cl/histroy',[Withdraw::class,'createClaim']);
+
+
+Route::get('/kick',[TelegramController::class,'kickMembers']);

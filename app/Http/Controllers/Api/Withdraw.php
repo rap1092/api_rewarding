@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Balance;
+use App\Models\Withdraw as WD;
+use App\Library\EncryptionService;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Carbon;
@@ -46,6 +48,65 @@ class Withdraw extends Controller
                 "fairlink" => $this->fairlaunchLink,
                 'x' => $data
         ]);
+    }
 
+    public function claim(Request $req){
+        $reqid = $req->header('SecChUaOrigin');
+        $real_balance = DB::table('member_balance_real_token')->where('wdID', $reqid)->first();
+        $point = DB::table('balances')->where('wdID', $reqid)->first();
+        $ratio = DB::table('comparison_conversion')->select('conversion_result')->limit(1)->first();
+        $data = new EncryptionService($reqid);
+        $encrypt = $data->encrypt(json_encode([
+            'sk' => "geQGwXBxuxfdN3R3NhctWTsCMnyEvGndf271Es5GDEngvxjTtqHqJhy8D3Y1errQwUroRZ5R7VGXBxtS72hpXDp",
+            'ca' => 'A1Rd2rGscGqUzUTaqcK1yC7M2r9jCmVKxeHFmXVnPvL9',
+            'data' => [
+                'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
+                'fullname' => $real_balance->fullname,
+                'userId' => $real_balance->userTgId,
+                'point' =>  number_format($point->balance,2,",","."),
+                'ratio' =>(float) number_format($ratio->conversion_result,2),
+                'amount' => (float) number_format($real_balance->real_balance_mink,2,".","") * 1000000
+            ]
+        ]));
+        $record = [
+            'data' => $encrypt,
+            'token' => base64_encode(json_encode([
+                'reqid' => $reqid,
+                'k' => $data->key
+            ])),
+        ];
+        $encrypt = new EncryptionService("3f59d5e982e37a9db70b721fcfa8e062");
+        $encryptedData = $encrypt->encrypt(base64_encode(json_encode($record)));
+        return Response()->json(['status' => true,'data' => $encryptedData]);
+    }
+
+    public function createClaim(Request $req){
+        $reqid = $req->header('SecChUaOrigin');
+        $transactionId = $req->input('transactionId');
+        $status = $req->input('status');
+        $real_balance = DB::table('member_balance_real_token')->where('wdID', $reqid)->first();
+        $wd = WD::where(['transactionId' => $transactionId]);
+        if($wd->count() > 0){
+            $update = $wd->update(['status' => $status]);
+            if($update){
+                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => 0]);
+                return Response()->json(['status' => true],200);
+            }
+            return Response()->json(['status' => false],500);
+        }
+        else{+
+            $create = WD::create([
+                'userTgId' => $real_balance->userTgId,
+                'transactionId' => $transactionId,
+                'amount' => $real_balance->real_balance_mink,
+                'status' => $status
+            ]);
+            if($create){
+                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => 0]);
+                return Response()->json(['status' => true],200);
+            }
+            return Response()->json(['status' => false],500);
+
+        }
     }
 }

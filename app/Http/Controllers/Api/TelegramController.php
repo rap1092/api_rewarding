@@ -23,12 +23,14 @@ class TelegramController extends Controller
             return response()->json(['error' => 'Invalid user IDs'], 400);
         }
 
+        $response = "";
+
         foreach ($userIds as $userId) {
             $result = $this->kickMember($userId);
 
             if ($result['ok'] === false) {
                 // Log atau lakukan sesuatu dengan error
-                return response()->json(['error' => 'Failed to kick user: ' . $result['description']], 500);
+                $response = $result['ok'];
             }
         }
 

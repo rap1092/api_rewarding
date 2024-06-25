@@ -43,7 +43,7 @@ class TelegramController extends Controller
         $response = $client->post($url, [
             'json' => [
                 'chat_id' => $this->chatId,
-                'user_id' =>(int) $userId,
+                'user_id' => $userId,
             ]
         ]);
 

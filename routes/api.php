@@ -25,6 +25,7 @@ Route::post('/tasks/claimCreate',[Tasks::class,'claimCreate']);
 Route::post('/tasks/claim',[Tasks::class,'claim']);
 Route::post('/cl/getinfo',[Withdraw::class,'claim']);
 Route::post('/cl/histroy',[Withdraw::class,'createClaim']);
+Route::post('/cl/histroy-wd',[Withdraw::class,'getHistory']);
 
 
 Route::get('/kick',[TelegramController::class,'kickMembers']);

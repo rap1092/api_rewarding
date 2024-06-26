@@ -57,7 +57,7 @@ class Withdraw extends Controller
         $ratio = DB::table('comparison_conversion')->select('conversion_result')->limit(1)->first();
         $data = new EncryptionService($reqid);
         $encrypt = $data->encrypt(json_encode([
-            'sk' => "geQGwXBxuxfdN3R3NhctWTsCMnyEvGndf271Es5GDEngvxjTtqHqJhy8D3Y1errQwUroRZ5R7VGXBxtS72hpXDp",
+            'sk' => "ApYgmkBhttXBe3D6KCvy4c9Ehs4uv6WLJ8vm2NZTCmizVHnic4jrLjRVrguENLm6QD4gR65WMt6NEjzBzCz4Tfo",
             'ca' => 'A1Rd2rGscGqUzUTaqcK1yC7M2r9jCmVKxeHFmXVnPvL9',
             'data' => [
                 'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
@@ -94,7 +94,7 @@ class Withdraw extends Controller
             }
             return Response()->json(['status' => false],500);
         }
-        else{+
+        else{
             $create = WD::create([
                 'userTgId' => $real_balance->userTgId,
                 'transactionId' => $transactionId,
@@ -106,7 +106,14 @@ class Withdraw extends Controller
                 return Response()->json(['status' => true],200);
             }
             return Response()->json(['status' => false],500);
-
         }
+    }
+
+    public function getHistory(Request $req) {
+        $reqid = $req->header('SecChUaOrigin');
+        $real_balance = DB::table('member_balance_real_token')->where('wdID', $reqid)->first();
+        $wdData = WD::where(['userTgId' => $real_balance->userTgId])
+                  ->select(DB::raw('transactionId as signature'),'amount','status')->get();
+        return Response()->json(['status' => true, 'data' => $wdData]);
     }
 }

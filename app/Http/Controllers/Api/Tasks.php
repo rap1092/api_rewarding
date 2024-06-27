@@ -66,15 +66,16 @@ class Tasks extends Controller
     {
         $tasks = DB::table('tasks_rewards')
             ->where('type', 'always_exist')
-            ->select('id')
+            ->select('id','timing')
             ->get();
         $ids = $tasks->pluck('id');
-
-        UserTasks::where('userTgId', $userId)
+        foreach($tasks as $item){
+            UserTasks::where('userTgId', $userId)
             ->where('status', 3)
-            ->whereIn('taskId', $ids)
-            ->where('updated_at', '<', Carbon::now()->subMinutes(30))
+            ->whereIn('taskId', $item->id)
+            ->where('updated_at', '<', Carbon::now()->subMinutes($item->timing))
             ->update(['status' => 1]);
+        }
 
         return true;
     }

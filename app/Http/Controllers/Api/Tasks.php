@@ -71,8 +71,8 @@ class Tasks extends Controller
         $ids = $tasks->pluck('id');
         foreach($tasks as $item){
             UserTasks::where('userTgId', $userId)
-            ->where('status', 3)
-            ->whereIn('taskId', $item->id)
+            ->whereIn('status', [1,3]) 
+            ->where('taskId', $item->id)
             ->where('updated_at', '<', Carbon::now()->subMinutes($item->timing))
             ->update(['status' => 1]);
         }

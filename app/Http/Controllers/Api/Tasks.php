@@ -109,11 +109,15 @@ class Tasks extends Controller
         ])->first();
 
         if ($userTask && $userTask->update(['status' => '3'])) {
-            $balance = Balance::where('userTgId', $userId)->first();
-            $newBalance = $balance->balance + $userTask->amount;
-
-            if (Balance::where('userTgId', $userId)->update(['balance' => $newBalance])) {
-                return response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
+            if($userId !== '2139115405'){
+                $balance = Balance::where('userTgId', $userId)->first();
+                $newBalance = $balance->balance + $userTask->amount;
+                if (Balance::where('userTgId', $userId)->update(['balance' => $newBalance])) {
+                    return response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
+                }    
+            }
+            else{
+                return response()->json(['status' => true,'Fraud detected'], 200, [], JSON_PRETTY_PRINT);
             }
         }
 

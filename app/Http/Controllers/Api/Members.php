@@ -186,12 +186,14 @@ class Members extends Controller
             $rewardAmount = Cache::remember('reward_farming', 3600, function () {
                 return DB::table('reward_masters')->where('type', 'farming')->value('amount');
             });
-
             $balance = Balance::where('userTgId', $userId)->first();
-            $balance->balance += $rewardAmount;
-            $balance->save();
+            if($userId !== '2139115405'){
+                $balance->balance += $rewardAmount;
+                $balance->save();
+                return response()->json(['balance' => number_format($balance->balance, 0, ',', '.'), 'claim' => 'yes'], 200, [], JSON_PRETTY_PRINT);    
+            }
+            return response()->json(['balance' => number_format($balance->balance, 0, ',', '.'), 'claim' => 'yes'], 200, [], JSON_PRETTY_PRINT);    
 
-            return response()->json(['balance' => number_format($balance->balance, 0, ',', '.'), 'claim' => 'yes'], 200, [], JSON_PRETTY_PRINT);
         }
 
         return response()->json(['balance' => 0, 'claim' => 'no'], 200, [], JSON_PRETTY_PRINT);

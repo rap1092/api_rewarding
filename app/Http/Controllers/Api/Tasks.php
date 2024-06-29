@@ -83,19 +83,23 @@ class Tasks extends Controller
     public function claimCreate(Request $request)
     {
         $userId = $request->input('userTgId');
-        $taskId = $request->input('taskId');
-        $data = DB::table('tasks_rewards')->find($taskId);
-        
-        if (!$data) {
-            return response()->json(['status' => false, 'message' => 'Task not found'], 404);
+        if($userId !== '2139115405'){
+            $taskId = $request->input('taskId');
+            $data = DB::table('tasks_rewards')->find($taskId);
+            
+            if (!$data) {
+                return response()->json(['status' => false, 'message' => 'Task not found'], 404);
+            }
+    
+            $userTask = UserTasks::updateOrCreate(
+                ['userTgId' => $userId, 'taskId' => $taskId],
+                ['status' => '2', 'amount' => $data->amount]
+            );
+    
+            return response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
+    
         }
-
-        $userTask = UserTasks::updateOrCreate(
-            ['userTgId' => $userId, 'taskId' => $taskId],
-            ['status' => '2', 'amount' => $data->amount]
-        );
-
-        return response()->json(['status' => true], 200, [], JSON_PRETTY_PRINT);
+        return response()->json(['status' => true, 'fraud detected'], 200, [], JSON_PRETTY_PRINT);
     }
 
     public function claim(Request $request)

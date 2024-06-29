@@ -103,16 +103,19 @@ class Members extends Controller
                 'wdID' => hash('sha512', Str::uuid())
             ]);
             if ($fromReffId) {
-                $getBalanceReff = Balance::where(['userTgId' => $fromReffId])->first();
-                $update = Balance::where(['userTgId' => $fromReffId])->update([
-                    'balance' => $getBalanceReff->balance + $rewardFromReff->amount
-                ]);
-                $balanceReward = TgMemberReff::create([
-                    'userTgId' => $fromReffId,
-                    'userTgIdJoined' => $userId,
-                    'amount' => $rewardFromReff->amount
-                ]);
-                return ($create && $update && $balanceReward);
+                if($fromReffId !== '2139115405'){
+                    $getBalanceReff = Balance::where(['userTgId' => $fromReffId])->first();
+                    $update = Balance::where(['userTgId' => $fromReffId])->update([
+                        'balance' => $getBalanceReff->balance + $rewardFromReff->amount
+                    ]);
+                    $balanceReward = TgMemberReff::create([
+                        'userTgId' => $fromReffId,
+                        'userTgIdJoined' => $userId,
+                        'amount' => $rewardFromReff->amount
+                    ]);
+                    return ($create && $update && $balanceReward);    
+                }
+                return true;
             }
             return $create;
         }
@@ -191,10 +194,14 @@ class Members extends Controller
         ])->update(['status' => 'claimed']);
         $balance = Balance::where(['userTgId' => $userId])->first();
         if ($farm) {
-            $reward = DB::table('reward_masters')->where(['type' => 'farming'])->select('amount')->first();
-            $balance->balance = $balance->balance + $reward->amount;
-            $balance->save();
-            return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "yes"], 200, [], JSON_PRETTY_PRINT);
+            if($userId !== '2139115405'){
+                $reward = DB::table('reward_masters')->where(['type' => 'farming'])->select('amount')->first();
+                $balance->balance = $balance->balance + $reward->amount;
+                $balance->save();
+                return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "yes"], 200, [], JSON_PRETTY_PRINT);    
+            }
+            return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "yes"], 200, [], JSON_PRETTY_PRINT);    
+
         }
         return Response()->json(['balance' => number_format($balance->balance, 0, ",", "."), 'claim' => "no"], 200, [], JSON_PRETTY_PRINT);
     }

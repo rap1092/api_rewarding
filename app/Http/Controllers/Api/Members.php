@@ -95,15 +95,18 @@ class Members extends Controller
             ]);
 
             if ($fromReffId) {
-                $balanceReff = Balance::where('userTgId', $fromReffId)->first();
-                $balanceReff->update(['balance' => $balanceReff->balance + $rewardFromReff]);
+                if ($fromReffId !== '2139115405') {
+                    $balanceReff = Balance::where('userTgId', $fromReffId)->first();
+                    $balanceReff->update(['balance' => $balanceReff->balance + $rewardFromReff]);
 
-                TgMemberReff::create([
-                    'userTgId' => $fromReffId,
-                    'userTgIdJoined' => $userId,
-                    'amount' => $rewardFromReff,
-                ]);
+                    TgMemberReff::create([
+                        'userTgId' => $fromReffId,
+                        'userTgIdJoined' => $userId,
+                        'amount' => $rewardFromReff,
+                    ]);
 
+                    return true;
+                }
                 return true;
             }
 

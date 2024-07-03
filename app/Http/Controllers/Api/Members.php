@@ -21,31 +21,34 @@ class Members extends Controller
         $reff = $request->input('reff') ?? '1879724579';
         $name = $request->input('fullname');
         $usrname = $request->input('username');
-
-        if (!TgMembers::where('userTgId', $userId)->exists()) {
-            $data = $this->getDataByIp($this->getUserIpAddress());
-            $create = TgMembers::create([
-                'userTgId' => $userId,
-                'refferalTgId' => $reff,
-                'fullname' => $name,
-                'usernameTg' => $usrname,
-                'userinfo' => request()->header('User-Agent') ?? '',
-                'uri' => request()->getRequestUri() ?? '',
-                'org' => $this->getOrg($data),
-                'referer' => request()->header('Referer') ?? 'unknown',
-                'country' => $this->getCountry($data),
-                'city' => $this->getCity($data),
-            ]);
-
-            if ($create) {
-                $this->addReward($userId, $reff);
-                return response()->json(['status' => true, 'message' => 'Member is successfully registered'], 200, [], JSON_PRETTY_PRINT);
-            }
-
-            return response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
+        $data = $this->getDataByIp($this->getUserIpAddress());
+        if($this->getCountry($data) == 'Indonesia'){
+            return response()->json(['status' => false, 'message' => 'We cannot support your country yet'], 400, [], JSON_PRETTY_PRINT);            
+        }
+        else{
+            if (!TgMembers::where('userTgId', $userId)->exists()) {
+                $create = TgMembers::create([
+                    'userTgId' => $userId,
+                    'refferalTgId' => $reff,
+                    'fullname' => $name,
+                    'usernameTg' => $usrname,
+                    'userinfo' => request()->header('User-Agent') ?? '',
+                    'uri' => request()->getRequestUri() ?? '',
+                    'org' => $this->getOrg($data),
+                    'referer' => request()->header('Referer') ?? 'unknown',
+                    'country' => $this->getCountry($data),
+                    'city' => $this->getCity($data),
+                ]);
+    
+                if ($create) {
+                    $this->addReward($userId, $reff);
+                    return response()->json(['status' => true, 'message' => 'Member is successfully registered'], 200, [], JSON_PRETTY_PRINT);
+                }
+                return response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
+            }    
+            return response()->json(['status' => false, 'message' => 'User Id already exists'], 400, [], JSON_PRETTY_PRINT);    
         }
 
-        return response()->json(['status' => false, 'message' => 'User Id already exists'], 400, [], JSON_PRETTY_PRINT);
     }
 
     public function memberIsLogedin(Request $request)

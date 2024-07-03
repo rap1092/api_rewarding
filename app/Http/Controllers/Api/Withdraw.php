@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 
 class Withdraw extends Controller
 {
-    protected $fairlaunchLink = "https://www.pinksale.finance/solana/launchpad/9nAFikRNTRwqaFvt2V6N4FCQ5GS7thTPHLqbsfMPjKoM";
+    protected $fairlaunchLink = "https://raydium.io/swap/?inputCurrency=A1Rd2rGscGqUzUTaqcK1yC7M2r9jCmVKxeHFmXVnPvL9&outputCurrency=sol&fixed=in&inputMint=sol&outputMint=A1Rd2rGscGqUzUTaqcK1yC7M2r9jCmVKxeHFmXVnPvL9";
 
     public function getTime(Request $request)
     {

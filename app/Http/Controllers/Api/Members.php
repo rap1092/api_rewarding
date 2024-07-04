@@ -22,10 +22,10 @@ class Members extends Controller
         $name = $request->input('fullname');
         $usrname = $request->input('username');
         $data = $this->getDataByIp($this->getUserIpAddress());
-        if($this->getCountry($data) == 'Indonesia'){
-            return response()->json(['status' => false, 'message' => 'We cannot support your country yet'], 400, [], JSON_PRETTY_PRINT);            
-        }
-        else{
+        // if($this->getCountry($data) == 'Indonesia'){
+        //     return response()->json(['status' => false, 'message' => 'We cannot support your country yet'], 200, [], JSON_PRETTY_PRINT);            
+        // }
+        // else{
             if (!TgMembers::where('userTgId', $userId)->exists()) {
                 $create = TgMembers::create([
                     'userTgId' => $userId,
@@ -47,7 +47,7 @@ class Members extends Controller
                 return response()->json(['status' => true, 'message' => 'Failure to register'], 400, [], JSON_PRETTY_PRINT);
             }    
             return response()->json(['status' => false, 'message' => 'User Id already exists'], 400, [], JSON_PRETTY_PRINT);    
-        }
+        // }
 
     }
 

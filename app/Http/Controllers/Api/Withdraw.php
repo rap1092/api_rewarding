@@ -53,12 +53,13 @@ class Withdraw extends Controller
     public function claim(Request $req){
         $reqid = $req->header('SecChUaOrigin');
         $real_balance = DB::table('member_balance_real_token')->where('wdID', $reqid)->first();
+        $sc = DB::table("smart_contract")->where('id',1)->first();
         $point = DB::table('balances')->where('wdID', $reqid)->first();
         $ratio = DB::table('comparison_conversion')->select('conversion_result')->limit(1)->first();
         $data = new EncryptionService($reqid);
         $encrypt = $data->encrypt(json_encode([
-            'sk' => "ApYgmkBhttXBe3D6KCvy4c9Ehs4uv6WLJ8vm2NZTCmizVHnic4jrLjRVrguENLm6QD4gR65WMt6NEjzBzCz4Tfo",
-            'ca' => 'A1Rd2rGscGqUzUTaqcK1yC7M2r9jCmVKxeHFmXVnPvL9',
+            'sk' => $sc->secretKey,
+            'ca' => $sc->mintAddress,
             'data' => [
                 'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
                 'fullname' => $real_balance->fullname,

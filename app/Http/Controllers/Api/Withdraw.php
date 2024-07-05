@@ -31,7 +31,7 @@ class Withdraw extends Controller
         ];
 
         $wdId = Balance::where(['userTgId' => $request->input('userTgId')])->select('wdID')->first();
-        $data = base64_encode("https://claim.minkspace.com?req=".$wdId->wdID);
+        $data = base64_encode("https://claim.minkspace.com/".$wdId->wdID);
 
         $dateFair = Carbon::parse($fairlaunch->endTime);
         $fairlaunch = [

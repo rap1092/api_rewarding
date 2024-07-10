@@ -85,12 +85,15 @@ class Withdraw extends Controller
         $reqid = $req->header('SecChUaOrigin');
         $transactionId = $req->input('transactionId');
         $status = $req->input('status');
+        $max=9000000000;
         $real_balance = DB::table('member_balance_real_token')->where('wdID', $reqid)->first();
+        $amount = $real_balance->real_balance_mink > $max ? $max : $real_balance->real_balance_mink;
         $wd = WD::where(['transactionId' => $transactionId]);
         if($wd->count() > 0){
             $update = $wd->update(['status' => $status]);
             if($update){
-                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => 0]);
+                $blnc = $real_balance->real_balance_mink - $amount;
+                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => $blnc]);
                 return Response()->json(['status' => true],200);
             }
             return Response()->json(['status' => false],500);
@@ -99,11 +102,12 @@ class Withdraw extends Controller
             $create = WD::create([
                 'userTgId' => $real_balance->userTgId,
                 'transactionId' => $transactionId,
-                'amount' => $real_balance->real_balance_mink,
+                'amount' => $amount,
                 'status' => $status
             ]);
             if($create){
-                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => 0]);
+                $blnc = $real_balance->real_balance_mink - $amount;
+                $balance = Balance::where(['wdID' => $reqid])->update(['balance' => $blnc]);
                 return Response()->json(['status' => true],200);
             }
             return Response()->json(['status' => false],500);

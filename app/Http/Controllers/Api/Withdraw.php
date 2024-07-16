@@ -58,8 +58,6 @@ class Withdraw extends Controller
         $ratio = DB::table('comparison_conversion')->select('conversion_result')->limit(1)->first();
         $data = new EncryptionService($reqid);
         $encrypt = $data->encrypt(json_encode([
-            'sk' => $sc->secretKey,
-            'ca' => $sc->mintAddress,
             'data' => [
                 'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
                 'fullname' => $real_balance->fullname,

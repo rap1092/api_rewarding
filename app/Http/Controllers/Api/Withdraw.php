@@ -121,4 +121,9 @@ class Withdraw extends Controller
                   ->select(DB::raw('transactionId as signature'),'amount','status')->get();
         return Response()->json(['status' => true, 'data' => $wdData]);
     }
+
+    public function wd(Request $req,$id){
+        $real_balance = DB::table('member_balance_real_token')->where('wdID', $id)->first();
+        return Response()->json(['status' => true, 'amount' => $real_balance->real_balance_mink]);
+    }
 }

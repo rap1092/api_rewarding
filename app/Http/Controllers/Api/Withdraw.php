@@ -61,7 +61,7 @@ class Withdraw extends Controller
             'data' => [
                 'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
                 'fullname' => $real_balance->fullname,
-                'isEligible' => $this->isEligible($point->userTgId,20000000),
+                'isEligible' => $this->isEligible($point->userTgId,10000000),
                 'isCreatedWLNFT' => $this->isCreatedWLNFT($point->userTgId),
                 'userId' => $real_balance->userTgId,
                 'point' =>  number_format($point->balance,2,",","."),
@@ -130,7 +130,7 @@ class Withdraw extends Controller
     function isEligible($userTgId, $amount){
         $members = DB::table('members')
              ->where('userTgId', $userTgId)
-             ->whereNull('ipaddress')
+             ->whereNull('ban')
              ->count();
         if($members > 0){
             $balance = DB::table('member_balance_real_token')
@@ -149,7 +149,7 @@ class Withdraw extends Controller
         $reqid = $request->header('SecChUaOrigin');
         $wallet = $request->header('address');
         $balance = DB::table('balances')->where(['wdID' => $reqid])->first();
-        if($this->isEligible($balance->userTgId,20000000)){
+        if($this->isEligible($balance->userTgId,10000000)){
             try{
                 $create = DB::table('whitelist_nft')->insert([
                     'userTgId' => $balance->userTgId,

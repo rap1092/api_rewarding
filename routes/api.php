@@ -27,5 +27,6 @@ Route::post('/cl/getinfo',[Withdraw::class,'claim']);
 Route::post('/cl/histroy',[Withdraw::class,'createClaim']);
 Route::post('/cl/histroy-wd',[Withdraw::class,'getHistory']);
 Route::get('/xhd/{id}',[Withdraw::class,'wd']);
+Route::post('wlnft', [Withdraw::class,'WLNFT']);
 
 Route::get('/kick',[TelegramController::class,'kickMembers']);

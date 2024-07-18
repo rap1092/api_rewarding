@@ -61,6 +61,8 @@ class Withdraw extends Controller
             'data' => [
                 'real_balance' => number_format($real_balance->real_balance_mink,2,",","."),
                 'fullname' => $real_balance->fullname,
+                'isEligible' => $this->isEligible($point->userTgId,20000000),
+                'isCreatedWLNFT' => $this->isCreatedWLNFT($point->userTgId),
                 'userId' => $real_balance->userTgId,
                 'point' =>  number_format($point->balance,2,",","."),
                 'ratio' =>(float) number_format($ratio->conversion_result,2),
@@ -123,5 +125,53 @@ class Withdraw extends Controller
     public function wd(Request $req,$id){
         $real_balance = DB::table('member_balance_real_token')->where('wdID', $id)->first();
         return Response()->json(['status' => true, 'amount' => $real_balance->real_balance_mink]);
+    }
+
+    function isEligible($userTgId, $amount){
+        $members = DB::table('members')
+             ->where('userTgId', $userTgId)
+             ->whereNull('ipaddress')
+             ->count();
+        if($members > 0){
+            $balance = DB::table('member_balance_real_token')
+            ->where('userTgId', $userTgId)
+            ->where('real_balance_mink', '>=', $amount)
+            ->count();
+            if($balance > 0){
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public function WLNFT(Request $request){
+        $reqid = $request->header('SecChUaOrigin');
+        $wallet = $request->header('address');
+        $balance = DB::table('balances')->where(['wdID' => $reqid])->first();
+        if($this->isEligible($balance->userTgId,20000000)){
+            try{
+                $create = DB::table('whitelist_nft')->insert([
+                    'userTgId' => $balance->userTgId,
+                    'walletAddress' => $wallet
+                ]);
+                if($create){
+                    return Response()->json(['status' => true,'message' => "Success"],200,[],JSON_PRETTY_PRINT);
+                }
+                return Response()->json(['status' => false,'message' => "Failed"],400,[],JSON_PRETTY_PRINT);
+            }
+            catch(\Exception $e){
+                return Response()->json(['status' => false,'message' => $e->getMessage()],400,[],JSON_PRETTY_PRINT);
+            }
+        }
+        return Response()->json(['status' => false,'message' => 'Not Eligible'],400,[],JSON_PRETTY_PRINT);
+    }
+
+    function isCreatedWLNFT($userTgId){
+        $data = DB::table('whitelist_nft')->where(['userTgId' => $userTgId])->count();
+        if($data > 0){
+            return true;
+        }
+        return false;
     }
 }

@@ -63,6 +63,7 @@ class Withdraw extends Controller
                 'fullname' => $real_balance->fullname,
                 'isEligible' => $this->isEligible($point->userTgId,10000000),
                 'isCreatedWLNFT' => $this->isCreatedWLNFT($point->userTgId),
+                'address' => $this->getWLNFT($point->userTgId),
                 'userId' => $real_balance->userTgId,
                 'point' =>  number_format($point->balance,2,",","."),
                 'ratio' =>(float) number_format($ratio->conversion_result,2),
@@ -173,5 +174,10 @@ class Withdraw extends Controller
             return true;
         }
         return false;
+    }
+
+    function getWLNFT($userTgId){
+        $data = DB::table('whitelist_nft')->where(['userTgId' => $userTgId])->first();
+        return $data->walletAddress;
     }
 }

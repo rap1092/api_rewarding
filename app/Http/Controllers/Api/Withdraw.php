@@ -178,6 +178,9 @@ class Withdraw extends Controller
 
     function getWLNFT($userTgId){
         $data = DB::table('whitelist_nft')->where(['userTgId' => $userTgId])->first();
-        return $data->walletAddress;
+        if($data){
+            return $data->walletAddress;
+        }
+        return "";
     }
 }

@@ -129,21 +129,14 @@ class Withdraw extends Controller
     }
 
     function isEligible($userTgId, $amount){
-        $members = DB::table('members')
-             ->where('userTgId', $userTgId)
-             ->whereNull('ban')
-             ->count();
-        if($members > 0){
-            $balance = DB::table('member_balance_real_token')
-            ->where('userTgId', $userTgId)
-            ->where('real_balance_mink', '>=', $amount)
-            ->count();
-            if($balance > 0){
-                return true;
-            }
-            return false;
+        $balance = DB::table('member_balance_real_token')
+        ->where('userTgId', $userTgId)
+        ->where('real_balance_mink', '>=', $amount)
+        ->count();
+        if($balance > 0){
+            return true;
         }
-        return false;
+        return false;       
     }
 
     public function WLNFT(Request $request){

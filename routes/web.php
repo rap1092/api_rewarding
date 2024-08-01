@@ -12,7 +12,7 @@ Route::get('/wl-nft',function(Request $request){
     $wl = $data->pluck('walletAddress');
     $html = "";
     foreach($wl as $item){
-        $html .= $item."<br>";
+        $html .= htmlspecialchars($item) . "<br>";
     }
     return $html;
 });

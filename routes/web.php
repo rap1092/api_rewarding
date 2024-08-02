@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 Route::get('/wl-nft',function(Request $request){
-    $data = DB::table('whitelist_nft')->select('walletAddress')->orderBy('walletAddress','asc');
+    $data = DB::table('whitelist_nft_copy')->select('walletAddress')->orderBy('walletAddress','asc');
     $wl = $data->pluck('walletAddress');
     $html = "";
     foreach($wl as $item){
